@@ -8,6 +8,7 @@ import { PaginatedResult } from '../_model/pagination';
 import { User } from '../_model/user';
 import { UserParams } from '../_model/userParams';
 import { AccountService } from './account.service';
+import { getPaginatedResult, getPaginationHeaders } from './paginationHelper';
 
 @Injectable({
   providedIn: 'root',
@@ -43,13 +44,13 @@ export class MembersService {
   }
 
   getMembers(userParams: UserParams) {
-    console.log(Object.values(userParams).join('-'));
+    // console.log(Object.values(userParams).join('-'));
     const response = this.memberCache.get(Object.values(userParams).join('-'));
     if (response) {
       return of(response);
     }
 
-    let params = this.getPaginationHeaders(
+    let params = getPaginationHeaders(
       userParams.pageNumber,
       userParams.pageSize
     );
@@ -58,9 +59,9 @@ export class MembersService {
     params = params.append('gender', userParams.gender.toString());
     params = params.append('orderBy', userParams.orderBy);
 
-    return this.getPaginatedResult<Member[]>(
+    return getPaginatedResult<Member[]>(
       this.baseUrl + 'users',
-      params
+      params, this.http
     ).pipe(
       map((members) => {
         this.memberCache.set(Object.values(userParams).join('-'), members);
@@ -102,41 +103,15 @@ export class MembersService {
   }
 
   getLikes(predicate: string, pageNumber, pageSize) {
-    let params = this.getPaginationHeaders(pageNumber, pageSize);
+    let params = getPaginationHeaders(pageNumber, pageSize);
     params = params.append('predicate', predicate);
 
-    return this.getPaginatedResult<Partial<Member[]>>(
+    return getPaginatedResult<Partial<Member[]>>(
       this.baseUrl + 'likes',
-      params
-    );
-  }
-
-  private getPaginationHeaders(pageNumber: number, pageSize: number) {
-    let params = new HttpParams();
-
-    params = params.append('pageNumber', pageNumber.toString());
-    params = params.append('pageSize', pageSize.toString());
-
-    return params;
-  }
-
-  private getPaginatedResult<T>(url, params: HttpParams) {
-    const pagintedResult: PaginatedResult<T> = new PaginatedResult<T>();
-    return (
+      params,
       this.http
-        // tako dobimo full response back, not just content of the body
-        .get<T>(url, { observe: 'response', params })
-        .pipe(
-          map((response) => {
-            pagintedResult.result = response.body;
-            if (response.headers.get('Pagination') !== null) {
-              pagintedResult.pagination = JSON.parse(
-                response.headers.get('Pagination')
-              );
-            }
-            return pagintedResult;
-          })
-        )
     );
   }
+
+
 }

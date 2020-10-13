@@ -56,7 +56,7 @@ namespace API.Controllers
 
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
 
-            return Ok(users);
+            return users;
         }
     }
 }
