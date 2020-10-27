@@ -69,7 +69,8 @@ namespace API
             app.UseCors(x => x.AllowAnyHeader()
             .AllowCredentials() //signalR
             .AllowAnyMethod()
-            .WithOrigins("https://localhost:4200"));
+            .WithOrigins("https://localhost:4200").WithOrigins("https://dating-ag.herokuapp.com")
+            );
 
             app.UseAuthentication();
             app.UseAuthorization();
